@@ -6,16 +6,8 @@ import time
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
-# Landmark indices yang dipakai:
-# thumb tip = 4
-# index tip = 8, pip = 6
-# middle tip = 12, pip = 10
-# ring tip = 16, pip = 14
-# pinky tip = 20, pip = 18
-
 TIP_IDS = [4, 8, 12, 16, 20]
-PIP_IDS = [3, 6, 10, 14, 18]  # untuk ibu jari kita pakai index 3 (ip) sebagai pembanding
-
+PIP_IDS = [3, 6, 10, 14, 18]  
 def count_fingers(hand_landmarks, hand_label, img_width, img_height):
     """
     Menghitung berapa jari yang terangkat pada satu tangan.
@@ -25,15 +17,9 @@ def count_fingers(hand_landmarks, hand_label, img_width, img_height):
     lm = hand_landmarks.landmark
     fingers_up = 0
 
-    # konversi koordinat ter-normalisasi ke pixel (jika perlu)
-    # tapi perbandingan relatif (x atau y) cukup dilakukan pada nilai normal
-    # Thumb: bandingkan x antara tip(4) dan ip(3) (atau mcp)
-    # Catatan: kondisi bisa berlawanan tergantung mirror; kita flip frame jadi gunakan kondisi ini.
     thumb_tip_x = lm[4].x
     thumb_ip_x = lm[3].x
 
-    # Jika hand_label == 'Right' : ibu jari berada di kiri gambar relatif ke jari lain saat terangkat
-    # Banyak implementasi: jika thumb_tip_x < thumb_ip_x => thumb terbuka untuk tangan kanan (setelah flip frame)
     if hand_label == "Right":
         if thumb_tip_x < thumb_ip_x:
             fingers_up += 1
@@ -41,7 +27,6 @@ def count_fingers(hand_landmarks, hand_label, img_width, img_height):
         if thumb_tip_x > thumb_ip_x:
             fingers_up += 1
 
-    # Finger lainnya: jika tip.y < pip.y (y meningkat ke bawah), berarti terangkat
     tips = [8, 12, 16, 20]
     pips = [6, 10, 14, 18]
     for t, p in zip(tips, pips):
@@ -81,13 +66,11 @@ def main():
             total_fingers = 0
 
             if results.multi_hand_landmarks:
-                # results.multi_handedness memberikan label per tangan (Left/Right)
-                # Mereka berpasangan dalam urutan yang sama: gunakan zip
+              
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     label = handedness.classification[0].label  # 'Left' atau 'Right'
                     h, w, _ = frame.shape
 
-                    # Hitung untuk tiap tangan
                     cnt = count_fingers(hand_landmarks, label, w, h)
                     total_fingers += cnt
 
